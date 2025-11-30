@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// unmarshalResponse decodes a JSON response body into a Country object, mapping fields based on struct tags or errors out.
 func (s *Service) unmarshalResponse(body []byte) (types.Country, error) {
 	const op errors.Op = "hamnut.Service.unmarshalResponse"
 	var country types.Country

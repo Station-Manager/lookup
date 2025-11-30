@@ -30,6 +30,7 @@ type Service struct {
 	initOnce      sync.Once
 }
 
+// Initialize initializes the Service instance by setting up required dependencies and configurations.
 func (s *Service) Initialize() error {
 	const op errors.Op = "hamnut.Service.Initialize"
 	if s.isInitialized.Load() {
@@ -61,6 +62,7 @@ func (s *Service) Initialize() error {
 	return initErr
 }
 
+// Lookup performs a country lookup using a callsign and returns the corresponding country information or an error.
 func (s *Service) Lookup(callsign string) (types.Country, error) {
 	const op errors.Op = "hamnut.Service.Lookup"
 	emptyRetVal := types.Country{}
