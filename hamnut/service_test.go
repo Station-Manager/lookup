@@ -247,3 +247,17 @@ func TestService_LookupWithContext_Canceled(t *testing.T) {
 		t.Fatalf("expected wrapped context cancellation error, got %v", err)
 	}
 }
+
+func TestService_Lookup_NoHTTPClient(t *testing.T) {
+	cfg := types.LookupConfig{Enabled: true, URL: "http://example.com", UserAgent: "test"}
+	s := &Service{Config: &cfg, LoggerService: &logging.Service{}}
+	s.isInitialized.Store(true)
+
+	_, err := s.Lookup("K1ABC")
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !strings.Contains(strings.ToLower(err.Error()), "http client is not configured") {
+		t.Fatalf("expected 'http client is not configured' error, got %v", err)
+	}
+}

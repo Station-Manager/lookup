@@ -30,6 +30,18 @@ type Service struct {
 	initOnce      sync.Once
 }
 
+// NewService returns a Hamnut lookup service with the provided dependencies. The
+// lookup.ConfigService is optional if you supply Config directly. The client can
+// be overridden for testing; otherwise it will be created during Initialize.
+func NewService(logger *logging.Service, cfgSvc *config.Service, cfg *types.LookupConfig, client *http.Client) *Service {
+	return &Service{
+		LoggerService: logger,
+		ConfigService: cfgSvc,
+		Config:        cfg,
+		client:        client,
+	}
+}
+
 // Initialize initializes the Service instance by setting up required dependencies and configurations.
 func (s *Service) Initialize() error {
 	const op errors.Op = "hamnut.Service.Initialize"
@@ -43,18 +55,29 @@ func (s *Service) Initialize() error {
 			initErr = errors.New(op).Msg("logger service has not been set/injected")
 			return
 		}
-		if s.ConfigService == nil {
-			initErr = errors.New(op).Msg("application config has not been set/injected")
+
+		if s.Config == nil {
+			if s.ConfigService == nil {
+				initErr = errors.New(op).Msg("application config has not been set/injected")
+				return
+			}
+
+			cfg, err := s.ConfigService.LookupServiceConfig(ServiceName)
+			if err != nil {
+				initErr = errors.New(op).Err(err).Msg("getting lookup service config")
+				return
+			}
+			s.Config = &cfg
+		}
+
+		if err := s.validateConfig(op); err != nil {
+			initErr = err
 			return
 		}
 
-		cfg, err := s.ConfigService.LookupServiceConfig(ServiceName)
-		if err != nil {
-			initErr = errors.New(op).Err(err).Msg("getting lookup service config")
-			return
+		if s.client == nil {
+			s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
 		}
-		s.Config = &cfg
-		s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
 
 		s.isInitialized.Store(true)
 	})
@@ -85,12 +108,13 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	if s.client == nil {
 		return emptyRetVal, errors.New(op).Msg("http client is not configured")
 	}
-	if !s.Config.Enabled {
-		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
-		return types.Country{Name: strings.TrimSpace(callsign)}, nil
-	}
 
 	callsign = strings.TrimSpace(callsign)
+	if !s.Config.Enabled {
+		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
+		return types.Country{Name: callsign}, nil
+	}
+
 	if callsign == "" {
 		return types.Country{}, errors.New(op).Msg("callsign cannot be empty")
 	}
@@ -139,4 +163,31 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	}
 
 	return country, nil
+}
+
+func (s *Service) validateConfig(op errors.Op) error {
+	if s.Config == nil {
+		return errors.New(op).Msg("service config is not set")
+	}
+
+	s.Config.URL = strings.TrimSpace(s.Config.URL)
+	if s.Config.URL == "" {
+		return errors.New(op).Msg("lookup service URL cannot be empty")
+	}
+
+	u, err := url.Parse(s.Config.URL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return errors.New(op).Err(err).Msg("lookup service URL is invalid")
+	}
+
+	s.Config.UserAgent = strings.TrimSpace(s.Config.UserAgent)
+	if s.Config.UserAgent == "" {
+		return errors.New(op).Msg("lookup service user agent cannot be empty")
+	}
+
+	if s.Config.HttpTimeout <= 0 {
+		return errors.New(op).Msg("lookup service timeout must be greater than zero")
+	}
+
+	return nil
 }
