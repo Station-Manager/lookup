@@ -1,7 +1,7 @@
 package hamnut
 
 import (
-	"fmt"
+	"context"
 	"github.com/Station-Manager/config"
 	"github.com/Station-Manager/errors"
 	"github.com/Station-Manager/logging"
@@ -64,14 +64,30 @@ func (s *Service) Initialize() error {
 
 // Lookup performs a country lookup using a callsign and returns the corresponding country information or an error.
 func (s *Service) Lookup(callsign string) (types.Country, error) {
-	const op errors.Op = "hamnut.Service.Lookup"
+	return s.LookupWithContext(context.Background(), callsign)
+}
+
+// LookupWithContext performs a country lookup using the supplied context so callers
+// can enforce cancellation and deadlines.
+func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types.Country, error) {
+	const op errors.Op = "hamnut.Service.LookupWithContext"
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	emptyRetVal := types.Country{}
 	if !s.isInitialized.Load() {
 		return emptyRetVal, errors.New(op).Msg("service is not initialized")
 	}
-	if s.Config != nil && !s.Config.Enabled {
+	if s.Config == nil {
+		return emptyRetVal, errors.New(op).Msg("service config is not set")
+	}
+	if s.client == nil {
+		return emptyRetVal, errors.New(op).Msg("http client is not configured")
+	}
+	if !s.Config.Enabled {
 		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
-		return types.Country{Name: callsign}, nil
+		return types.Country{Name: strings.TrimSpace(callsign)}, nil
 	}
 
 	callsign = strings.TrimSpace(callsign)
@@ -79,15 +95,17 @@ func (s *Service) Lookup(callsign string) (types.Country, error) {
 		return types.Country{}, errors.New(op).Msg("callsign cannot be empty")
 	}
 
-	params := url.Values{
-		"prefix": {callsign},
-	}
-
-	theUrl := fmt.Sprintf("%s?%s", s.Config.URL, params.Encode())
-	req, err := http.NewRequest(http.MethodGet, theUrl, nil)
+	u, err := url.Parse(s.Config.URL)
 	if err != nil {
-		err = errors.New(op).Err(err).Msg("Failed to create HTTP GET request")
-		return types.Country{}, err
+		return types.Country{}, errors.New(op).Err(err).Msg("invalid Hamnut base URL")
+	}
+	q := u.Query()
+	q.Set("prefix", callsign)
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return types.Country{}, errors.New(op).Err(err).Msg("Failed to create HTTP GET request")
 	}
 
 	req.Header.Set("User-Agent", s.Config.UserAgent)
@@ -95,8 +113,7 @@ func (s *Service) Lookup(callsign string) (types.Country, error) {
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		err = errors.New(op).Err(err).Msg("Failed to perform HTTP GET request")
-		return types.Country{}, err
+		return types.Country{}, errors.New(op).Err(err).Msg("Failed to perform HTTP GET request")
 	}
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
@@ -108,20 +125,17 @@ func (s *Service) Lookup(callsign string) (types.Country, error) {
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		b, _ := io.ReadAll(resp.Body)
-		err = errors.New(op).Errorf("Service returned unexpected status %d: %s", resp.StatusCode, string(b))
-		return types.Country{}, err
+		return types.Country{}, errors.New(op).Errorf("Service returned unexpected status %d: %s", resp.StatusCode, string(b))
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		err = errors.New(op).Errorf("Failed to read response body: %w", err)
-		return types.Country{}, err
+		return types.Country{}, errors.New(op).Errorf("Failed to read response body: %w", err)
 	}
 
 	country, err := s.unmarshalResponse(body)
 	if err != nil {
-		err = errors.New(op).Errorf("Failed to unmarshal JSON: %w", err)
-		return types.Country{}, err
+		return types.Country{}, errors.New(op).Err(err).Msg("Failed to unmarshal response body")
 	}
 
 	return country, nil
