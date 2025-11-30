@@ -3,10 +3,10 @@ module github.com/Station-Manager/lookup
 go 1.25
 
 require (
-	github.com/Station-Manager/config v0.0.16
+	github.com/Station-Manager/config v0.0.17
 	github.com/Station-Manager/errors v0.0.8
 	github.com/Station-Manager/logging v0.0.7
-	github.com/Station-Manager/types v0.0.33
+	github.com/Station-Manager/types v0.0.34
 	github.com/Station-Manager/utils v0.0.2
 	github.com/goccy/go-json v0.10.5
 )
@@ -24,7 +24,7 @@ require (
 	github.com/rs/zerolog v1.34.0 // indirect
 	go.bug.st/serial v1.6.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
