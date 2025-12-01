@@ -99,7 +99,7 @@ func (s *Service) unmarshalResponse(body []byte) (types.ContactedStation, error)
 		lower := strings.ToLower(sessionErr)
 		errBuilder := errors.New(op).Msg(sessionErr)
 		if strings.Contains(lower, "not found") {
-			errBuilder.Err(errors.ErrNotFound)
+			errBuilder = errBuilder.Err(errors.ErrNotFound)
 		}
 		return station, errBuilder
 	}
