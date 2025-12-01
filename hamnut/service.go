@@ -21,8 +21,8 @@ const (
 )
 
 type Service struct {
-	LoggerService *logging.Service `di.inject:"logger"`
-	ConfigService *config.Service  `di.inject:"config"`
+	ConfigService *config.Service  `di.inject:"configservice"`
+	LoggerService *logging.Service `di.inject:"loggingservice"`
 	Config        *types.LookupConfig
 	client        *http.Client
 
