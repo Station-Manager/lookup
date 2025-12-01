@@ -14,7 +14,7 @@ func (s *Service) unmarshalResponse(body []byte) (types.Country, error) {
 	const op errors.Op = "hamnut.Service.unmarshalResponse"
 	var country types.Country
 
-	var resp types.HamnutPrefixLookupResponse
+	var resp PrefixLookupResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return country, errors.New(op).Err(err).Msg("decoding Hamnut response")
 	}
@@ -42,7 +42,7 @@ func (s *Service) unmarshalResponse(body []byte) (types.Country, error) {
 
 	// Time offset handling: prefer a dedicated TimeOffset field if present; if not,
 	// attempt to derive from LocalTime if it looks like an ISO timestamp with
-	// timezone information. Otherwise leave empty rather than panicking.
+	// timezone information. Otherwise, leave empty rather than panicking.
 	if resp.TimeOffset != "" {
 		country.TimeOffset = resp.TimeOffset
 	} else if resp.LocalTime != "" {

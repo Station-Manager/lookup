@@ -1,4 +1,4 @@
-package hamnut
+package qrz
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	ServiceName = types.HamNutLookupServiceName
+	ServiceName = types.QrzLookupServiceName
 )
 
 type Service struct {
@@ -28,18 +28,8 @@ type Service struct {
 
 	isInitialized atomic.Bool
 	initOnce      sync.Once
-}
 
-// NewService returns a Hamnut lookup service with the provided dependencies. The
-// lookup.ConfigService is optional if you supply Config directly. The client can
-// be overridden for testing; otherwise it will be created during Initialize.
-func NewService(logger *logging.Service, cfgSvc *config.Service, cfg *types.LookupConfig, client *http.Client) *Service {
-	return &Service{
-		LoggerService: logger,
-		ConfigService: cfgSvc,
-		Config:        cfg,
-		client:        client,
-	}
+	sessionKey string
 }
 
 // Initialize initializes the Service instance by setting up required dependencies and configurations.
@@ -79,26 +69,33 @@ func (s *Service) Initialize() error {
 			s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
 		}
 
+		if err := s.requestAndSetSessionKey(); err != nil {
+			initErr = err
+			return
+		}
+
 		s.isInitialized.Store(true)
 	})
 
 	return initErr
 }
 
-// Lookup performs a country lookup using a callsign and returns the corresponding country information or an error.
-func (s *Service) Lookup(callsign string) (types.Country, error) {
+// Lookup retrieves information about a contacted station by its callsign.
+// It uses the default context and returns the station details or an error.
+func (s *Service) Lookup(callsign string) (types.ContactedStation, error) {
 	return s.LookupWithContext(context.Background(), callsign)
 }
 
-// LookupWithContext performs a country lookup using the supplied context so callers
-// can enforce cancellation and deadlines.
-func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types.Country, error) {
-	const op errors.Op = "hamnut.Service.LookupWithContext"
+// LookupWithContext retrieves information about a contacted station based on the provided callsign and context.
+// It validates the service's initialization state, builds the request, and processes the response or returns an error.
+// Returns a ContactedStation object with details or an error if the retrieval fails.
+func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types.ContactedStation, error) {
+	const op errors.Op = "qrz.service.LookupWithContext"
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	emptyRetVal := types.Country{}
+	emptyRetVal := types.ContactedStation{}
 	if !s.isInitialized.Load() {
 		return emptyRetVal, errors.New(op).Msg("service is not initialized")
 	}
@@ -112,19 +109,18 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	callsign = strings.TrimSpace(callsign)
 	if !s.Config.Enabled {
 		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
-		return types.Country{Name: callsign}, nil
-	}
-
-	if callsign == "" {
-		return emptyRetVal, errors.New(op).Msg("callsign cannot be empty")
+		return types.ContactedStation{Call: callsign}, nil
 	}
 
 	u, err := url.Parse(s.Config.URL)
 	if err != nil {
-		return emptyRetVal, errors.New(op).Err(err).Msg("invalid Hamnut base URL")
+		return emptyRetVal, errors.New(op).Err(err).Msg("invalid QRZ base URL")
 	}
+
 	q := u.Query()
-	q.Set("prefix", callsign)
+	q.Set("s", s.sessionKey)
+	q.Set("callsign", callsign)
+	q.Set("agent", s.Config.UserAgent)
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -133,7 +129,7 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	}
 
 	req.Header.Set("User-Agent", s.Config.UserAgent)
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", "application/xml")
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -142,10 +138,6 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
-
-	if resp.StatusCode == http.StatusNotFound {
-		return emptyRetVal, errors.New(op).Err(errors.ErrNotFound).Msg("Prefix not found by Hamnut")
-	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		b, _ := io.ReadAll(resp.Body)
@@ -157,37 +149,10 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 		return emptyRetVal, errors.New(op).Errorf("Failed to read response body: %w", err)
 	}
 
-	country, err := s.unmarshalResponse(body)
+	station, err := s.unmarshalResponse(body)
 	if err != nil {
 		return emptyRetVal, errors.New(op).Err(err).Msg("Failed to unmarshal response body")
 	}
 
-	return country, nil
-}
-
-func (s *Service) validateConfig(op errors.Op) error {
-	if s.Config == nil {
-		return errors.New(op).Msg("service config is not set")
-	}
-
-	s.Config.URL = strings.TrimSpace(s.Config.URL)
-	if s.Config.URL == "" {
-		return errors.New(op).Msg("lookup service URL cannot be empty")
-	}
-
-	u, err := url.Parse(s.Config.URL)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return errors.New(op).Err(err).Msg("lookup service URL is invalid")
-	}
-
-	s.Config.UserAgent = strings.TrimSpace(s.Config.UserAgent)
-	if s.Config.UserAgent == "" {
-		return errors.New(op).Msg("lookup service user agent cannot be empty")
-	}
-
-	if s.Config.HttpTimeout <= 0 {
-		return errors.New(op).Msg("lookup service timeout must be greater than zero")
-	}
-
-	return nil
+	return station, nil
 }
