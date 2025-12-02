@@ -34,7 +34,7 @@ type Service struct {
 
 // Initialize initializes the Service instance by setting up required dependencies and configurations.
 func (s *Service) Initialize() error {
-	const op errors.Op = "hamnut.Service.Initialize"
+	const op errors.Op = "qrz.Service.Initialize"
 	if s.isInitialized.Load() {
 		return nil
 	}
