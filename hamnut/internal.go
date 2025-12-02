@@ -74,5 +74,7 @@ func (s *Service) unmarshalResponse(body []byte) (types.Country, error) {
 		}
 	}
 
+	country.LocalTime = resp.LocalTime
+
 	return country, nil
 }
