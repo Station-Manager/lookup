@@ -86,6 +86,10 @@ func (s *Service) Initialize() error {
 // Lookup retrieves information about a contacted station by its callsign.
 // It uses the default context and returns the station details or an error.
 func (s *Service) Lookup(callsign string) (types.ContactedStation, error) {
+	if !s.Config.Enabled {
+		s.LoggerService.InfoWith().Msg("QRZ.com lookup not enabled in the config.")
+		return types.ContactedStation{}, nil
+	}
 	return s.LookupWithContext(context.Background(), callsign)
 }
 

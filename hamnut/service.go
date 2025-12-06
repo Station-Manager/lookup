@@ -91,6 +91,10 @@ func (s *Service) Initialize() error {
 
 // Lookup performs a country lookup using a callsign and returns the corresponding country information or an error.
 func (s *Service) Lookup(callsign string) (types.Country, error) {
+	if !s.Config.Enabled {
+		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config.")
+		return types.Country{}, nil
+	}
 	return s.LookupWithContext(context.Background(), callsign)
 }
 
