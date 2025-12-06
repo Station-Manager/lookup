@@ -66,12 +66,15 @@ func (s *Service) Initialize() error {
 		}
 
 		if s.client == nil {
-			s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
-		}
-
-		if err := s.requestAndSetSessionKey(); err != nil {
-			initErr = err
-			return
+			if s.Config.Enabled {
+				s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
+				if err := s.requestAndSetSessionKey(); err != nil {
+					initErr = err
+					return
+				}
+			} else {
+				s.LoggerService.InfoWith().Msg("QRZ.com callsign lookup is disabled in the config")
+			}
 		}
 
 		s.isInitialized.Store(true)

@@ -76,7 +76,11 @@ func (s *Service) Initialize() error {
 		}
 
 		if s.client == nil {
-			s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
+			if s.Config.Enabled {
+				s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
+			} else {
+				s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
+			}
 		}
 
 		s.isInitialized.Store(true)
