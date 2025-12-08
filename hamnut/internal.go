@@ -30,7 +30,7 @@ func (s *Service) unmarshalResponse(body []byte) (types.Country, error) {
 	country.Prefix = resp.Prefix
 	country.Ccode = resp.CountryCode
 	country.Continent = resp.Continent
-	country.DXCC = resp.PrimaryDXCCPrefix
+	country.DXCCPrefix = resp.PrimaryDXCCPrefix
 
 	// Numeric zones -> string fields.
 	if resp.CQZone != 0 {
