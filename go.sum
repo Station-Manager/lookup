@@ -1,5 +1,5 @@
-github.com/Station-Manager/config v0.0.19 h1:jBXwuxgTg1D3owhUM1ymf+A0aBp1eFE2+vH2rMBrZDk=
-github.com/Station-Manager/config v0.0.19/go.mod h1:ZcDu8aV++pItLk8fJnf4y4Lf3dBo+PxNmYxJ/7DQvPI=
+github.com/Station-Manager/config v0.0.20 h1:y/v795QnQF+X/4PZpQOwAKlBQaBZ+zXlQjv9+1jHW30=
+github.com/Station-Manager/config v0.0.20/go.mod h1:ZcDu8aV++pItLk8fJnf4y4Lf3dBo+PxNmYxJ/7DQvPI=
 github.com/Station-Manager/enums v0.0.1 h1:eQSGIscQpxUy7npIMMUKEiOswdxdXTv02Mw7cKhTxYU=
 github.com/Station-Manager/enums v0.0.1/go.mod h1:+DM4D5iPVIXyaflzHsBVQQb5DnBnL0iYNaddkKiBdao=
 github.com/Station-Manager/errors v0.0.9 h1:sAKBZ45jPT4NRdwlzdPgjJME608Y8RZn2uqoaG4h3/A=

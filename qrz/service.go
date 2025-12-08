@@ -69,6 +69,8 @@ func (s *Service) Initialize() error {
 			if s.Config.Enabled {
 				s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
 				if err := s.requestAndSetSessionKey(); err != nil {
+					// Any error here and we should disable the service
+					s.Config.Enabled = false
 					initErr = err
 					return
 				}

@@ -3,7 +3,7 @@ module github.com/Station-Manager/lookup
 go 1.25
 
 require (
-	github.com/Station-Manager/config v0.0.19
+	github.com/Station-Manager/config v0.0.20
 	github.com/Station-Manager/errors v0.0.9
 	github.com/Station-Manager/logging v0.0.7
 	github.com/Station-Manager/types v0.0.46
