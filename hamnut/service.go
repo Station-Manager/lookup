@@ -103,21 +103,25 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	}
 
 	emptyRetVal := types.Country{}
+
 	if !s.isInitialized.Load() {
-		s.Config.Enabled = false
+		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("service is not initialized")
 	}
 	if s.Config == nil {
-		s.Config.Enabled = false
+		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("service config is not set")
 	}
 	if s.client == nil {
-		s.Config.Enabled = false
+		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("http client is not configured")
 	}
 
 	if !s.Config.Enabled {
-		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
+		if s.LoggerService != nil {
+			s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
+		}
+		callsign = strings.TrimSpace(callsign)
 		return types.Country{Name: callsign}, nil
 	}
 
@@ -197,4 +201,10 @@ func (s *Service) validateConfig(op errors.Op) error {
 	}
 
 	return nil
+}
+
+func (s *Service) disableConfig() {
+	if s != nil && s.Config != nil {
+		s.Config.Enabled = false
+	}
 }
