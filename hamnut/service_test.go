@@ -165,8 +165,8 @@ func TestService_Lookup_Success(t *testing.T) {
 	if country.ITUZone != "28" {
 		t.Fatalf("unexpected ITUZone: %q", country.ITUZone)
 	}
-	if country.DXCC != "K" {
-		t.Fatalf("unexpected DXCC: %q", country.DXCC)
+	if country.DXCCPrefix != "K" {
+		t.Fatalf("unexpected DXCC: %q", country.DXCCPrefix)
 	}
 	if country.TimeOffset != "+02:00" {
 		t.Fatalf("unexpected TimeOffset: %q", country.TimeOffset)
