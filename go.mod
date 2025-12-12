@@ -3,10 +3,10 @@ module github.com/Station-Manager/lookup
 go 1.25
 
 require (
-	github.com/Station-Manager/config v0.0.25
+	github.com/Station-Manager/config v0.0.28
 	github.com/Station-Manager/errors v0.0.11
 	github.com/Station-Manager/logging v0.0.8
-	github.com/Station-Manager/types v0.0.54
+	github.com/Station-Manager/types v0.0.56
 	github.com/Station-Manager/utils v0.0.3
 	github.com/goccy/go-json v0.10.5
 )
