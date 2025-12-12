@@ -2,12 +2,13 @@ package qrz
 
 import (
 	"encoding/xml"
-	"github.com/Station-Manager/errors"
-	"github.com/Station-Manager/types"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/Station-Manager/errors"
+	"github.com/Station-Manager/types"
 )
 
 // fetchAndSetSessionKey fetches a session key from the configured QRZ endpoint and assigns it to the service instance.
@@ -180,6 +181,14 @@ func (s *Service) validateConfig(op errors.Op) error {
 
 	if s.Config.HttpTimeout <= 0 {
 		return errors.New(op).Msg("lookup service timeout must be greater than zero")
+	}
+
+	if len(s.Config.Username) < 3 {
+		return errors.New(op).Msg("QRZ.com lookup service username must be at least 3 characters long")
+	}
+
+	if len(s.Config.Password) < 5 {
+		return errors.New(op).Msg("QRZ.com lookup service password must be at least 5 characters long")
 	}
 
 	return nil

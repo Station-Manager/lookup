@@ -2,11 +2,6 @@ package qrz
 
 import (
 	"context"
-	"github.com/Station-Manager/config"
-	"github.com/Station-Manager/errors"
-	"github.com/Station-Manager/logging"
-	"github.com/Station-Manager/types"
-	"github.com/Station-Manager/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +9,12 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/Station-Manager/config"
+	"github.com/Station-Manager/errors"
+	"github.com/Station-Manager/logging"
+	"github.com/Station-Manager/types"
+	"github.com/Station-Manager/utils"
 )
 
 const (
