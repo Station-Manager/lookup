@@ -164,6 +164,11 @@ func (s *Service) validateConfig(op errors.Op) error {
 		return errors.New(op).Msg("service config is not set")
 	}
 
+	// Don't check the config it the service is not enabled
+	if !s.Config.Enabled {
+		return nil
+	}
+
 	s.Config.URL = strings.TrimSpace(s.Config.URL)
 	if s.Config.URL == "" {
 		return errors.New(op).Msg("lookup service URL cannot be empty")

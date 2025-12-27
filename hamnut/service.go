@@ -2,11 +2,6 @@ package hamnut
 
 import (
 	"context"
-	"github.com/Station-Manager/config"
-	"github.com/Station-Manager/errors"
-	"github.com/Station-Manager/logging"
-	"github.com/Station-Manager/types"
-	"github.com/Station-Manager/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +9,12 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/Station-Manager/config"
+	"github.com/Station-Manager/errors"
+	"github.com/Station-Manager/logging"
+	"github.com/Station-Manager/types"
+	"github.com/Station-Manager/utils"
 )
 
 const (
@@ -179,6 +180,10 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 func (s *Service) validateConfig(op errors.Op) error {
 	if s.Config == nil {
 		return errors.New(op).Msg("service config is not set")
+	}
+
+	if !s.Config.Enabled {
+		return nil
 	}
 
 	s.Config.URL = strings.TrimSpace(s.Config.URL)
