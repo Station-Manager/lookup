@@ -78,7 +78,7 @@ func (s *Service) Initialize() error {
 
 		if s.client == nil {
 			if s.Config.Enabled {
-				s.client = utils.NewHTTPClient(s.Config.HttpTimeout * time.Second)
+				s.client = utils.NewHTTPClient(s.Config.HttpTimeoutSec * time.Second)
 			} else {
 				s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
 			}
@@ -201,7 +201,7 @@ func (s *Service) validateConfig(op errors.Op) error {
 		return errors.New(op).Msg("lookup service user agent cannot be empty")
 	}
 
-	if s.Config.HttpTimeout <= 0 {
+	if s.Config.HttpTimeoutSec <= 0 {
 		return errors.New(op).Msg("lookup service timeout must be greater than zero")
 	}
 

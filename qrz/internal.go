@@ -184,7 +184,7 @@ func (s *Service) validateConfig(op errors.Op) error {
 		return errors.New(op).Msg("lookup service user agent cannot be empty")
 	}
 
-	if s.Config.HttpTimeout <= 0 {
+	if s.Config.HttpTimeoutSec <= 0 {
 		return errors.New(op).Msg("lookup service timeout must be greater than zero")
 	}
 
