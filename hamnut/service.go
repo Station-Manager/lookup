@@ -106,15 +106,20 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	emptyRetVal := types.Country{}
 
 	if !s.isInitialized.Load() {
-		s.disableConfig()
+		//		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("service is not initialized")
 	}
 	if s.Config == nil {
-		s.disableConfig()
+		//		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("service config is not set")
 	}
+	// This check is here because if the client is disabled, the HTTP client will not be initialized
+	if !s.Config.Enabled {
+		return emptyRetVal, nil
+	}
+
 	if s.client == nil {
-		s.disableConfig()
+		//		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("http client is not configured")
 	}
 
@@ -208,8 +213,8 @@ func (s *Service) validateConfig(op errors.Op) error {
 	return nil
 }
 
-func (s *Service) disableConfig() {
-	if s != nil && s.Config != nil {
-		s.Config.Enabled = false
-	}
-}
+//func (s *Service) disableConfig() {
+//	if s != nil && s.Config != nil {
+//		s.Config.Enabled = false
+//	}
+//}

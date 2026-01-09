@@ -91,6 +91,7 @@ func (s *Service) Initialize() error {
 func (s *Service) Lookup(callsign string) (types.ContactedStation, error) {
 	if !s.Config.Enabled {
 		s.LoggerService.InfoWith().Msg("QRZ.com lookup not enabled in the config.")
+		// If not enabled, just return an empty station object - NO ERROR
 		return types.ContactedStation{}, nil
 	}
 	return s.LookupWithContext(context.Background(), callsign)
@@ -112,6 +113,11 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	if s.Config == nil {
 		return emptyRetVal, errors.New(op).Msg("service config is not set")
 	}
+	// This check is here because if the client is disabled, the HTTP client will not be initialized
+	if !s.Config.Enabled {
+		return emptyRetVal, nil
+	}
+
 	if s.client == nil {
 		return emptyRetVal, errors.New(op).Msg("http client is not configured")
 	}
