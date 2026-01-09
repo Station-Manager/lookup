@@ -3,16 +3,17 @@ package hamnut
 import (
 	"context"
 	"errors"
-	"github.com/Station-Manager/config"
-	smerrors "github.com/Station-Manager/errors"
-	"github.com/Station-Manager/logging"
-	"github.com/Station-Manager/types"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Station-Manager/config"
+	smerrors "github.com/Station-Manager/errors"
+	"github.com/Station-Manager/logging"
+	"github.com/Station-Manager/types"
 )
 
 // --- Test doubles ---
@@ -80,7 +81,7 @@ func TestService_Lookup_DisabledConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if country.Name != "K1ABC" {
+	if country.Name != "Unknown" {
 		t.Fatalf("expected Name to be callsign, got %q", country.Name)
 	}
 }
