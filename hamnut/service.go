@@ -119,7 +119,7 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 		if s.LoggerService != nil {
 			s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
 		}
-		return types.Country{Name: callsign}, nil
+		return types.Country{Name: "Unknown"}, nil
 	}
 
 	if s.client == nil {
@@ -206,9 +206,3 @@ func (s *Service) validateConfig(op errors.Op) error {
 
 	return nil
 }
-
-//func (s *Service) disableConfig() {
-//	if s != nil && s.Config != nil {
-//		s.Config.Enabled = false
-//	}
-//}
