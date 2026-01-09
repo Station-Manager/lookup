@@ -106,32 +106,26 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	emptyRetVal := types.Country{}
 
 	if !s.isInitialized.Load() {
-		//		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("service is not initialized")
 	}
 	if s.Config == nil {
-		//		s.disableConfig()
 		return emptyRetVal, errors.New(op).Msg("service config is not set")
 	}
+
+	callsign = strings.TrimSpace(callsign)
+
 	// This check is here because if the client is disabled, the HTTP client will not be initialized
-	if !s.Config.Enabled {
-		return emptyRetVal, nil
-	}
-
-	if s.client == nil {
-		//		s.disableConfig()
-		return emptyRetVal, errors.New(op).Msg("http client is not configured")
-	}
-
 	if !s.Config.Enabled {
 		if s.LoggerService != nil {
 			s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
 		}
-		callsign = strings.TrimSpace(callsign)
 		return types.Country{Name: callsign}, nil
 	}
 
-	callsign = strings.TrimSpace(callsign)
+	if s.client == nil {
+		return emptyRetVal, errors.New(op).Msg("http client is not configured")
+	}
+
 	if callsign == "" {
 		return emptyRetVal, errors.New(op).Msg("callsign cannot be empty")
 	}

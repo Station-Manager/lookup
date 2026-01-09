@@ -113,19 +113,17 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	if s.Config == nil {
 		return emptyRetVal, errors.New(op).Msg("service config is not set")
 	}
+
+	callsign = strings.TrimSpace(callsign)
+
 	// This check is here because if the client is disabled, the HTTP client will not be initialized
 	if !s.Config.Enabled {
-		return emptyRetVal, nil
+		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
+		return types.ContactedStation{Call: callsign}, nil
 	}
 
 	if s.client == nil {
 		return emptyRetVal, errors.New(op).Msg("http client is not configured")
-	}
-
-	callsign = strings.TrimSpace(callsign)
-	if !s.Config.Enabled {
-		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
-		return types.ContactedStation{Call: callsign}, nil
 	}
 
 	u, err := url.Parse(s.Config.URL)
