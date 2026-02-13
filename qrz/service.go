@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	stderr "errors"
+
 	"github.com/Station-Manager/config"
 	"github.com/Station-Manager/errors"
 	"github.com/Station-Manager/logging"
@@ -118,7 +120,7 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 
 	// This check is here because if the client is disabled, the HTTP client will not be initialized
 	if !s.Config.Enabled {
-		s.LoggerService.InfoWith().Msg("Hamnut callsign/prefix lookup is disabled in the config")
+		s.LoggerService.InfoWith().Msg("QRZ.com callsign lookup is disabled in the config")
 		return types.ContactedStation{Call: callsign}, nil
 	}
 
@@ -164,7 +166,12 @@ func (s *Service) LookupWithContext(ctx context.Context, callsign string) (types
 	}
 
 	station, err := s.unmarshalResponse(body)
+	//TODO: handle 'Not found'
 	if err != nil {
+		if stderr.Is(err, errors.ErrNotFound) {
+			s.LoggerService.InfoWith().Str("callsign", callsign).Msg("Callsign not found in QRZ.com database")
+			return types.ContactedStation{Call: callsign}, nil
+		}
 		return emptyRetVal, errors.New(op).Err(err).Msg("Failed to unmarshal response body")
 	}
 
