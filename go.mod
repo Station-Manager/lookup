@@ -1,6 +1,6 @@
 module github.com/Station-Manager/lookup
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/Station-Manager/config v0.0.39
@@ -8,7 +8,7 @@ require (
 	github.com/Station-Manager/logging v0.0.12
 	github.com/Station-Manager/types v0.0.78
 	github.com/Station-Manager/utils v0.0.5
-	github.com/goccy/go-json v0.10.5
+	github.com/goccy/go-json v0.10.6
 )
 
 require (
@@ -24,9 +24,9 @@ require (
 	github.com/rs/zerolog v1.34.0 // indirect
 	go.bug.st/serial v1.6.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
